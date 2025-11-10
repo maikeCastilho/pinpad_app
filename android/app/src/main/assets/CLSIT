@@ -1,0 +1,26 @@
+[CliSiTef]
+DiretorioTrace=./files
+HabilitaTrace=0
+TraceRotativo=20
+TamanhoTraceRotativo=122880
+
+[CliSiTefI]
+DiretorioTrace=./files/
+HabilitaTrace=1
+
+[Geral]
+TransacoesAdicionaisHabilitadas=119;121;4178;7;8
+PermiteAlterarValorPagamento=0
+MostradorComunicacaoHabilitado=1
+
+[PinPadCompartilhado]
+Porta=AUTO_USB
+
+[SiTef]
+MantemConexaoAtiva=0
+ConexaoObrigatoria=0
+
+# ADICIONE ESSAS SEÇÕES ABAIXO:
+[Modelos]
+Cheque=Cheque.ini
+TLS=CONFITLS.INI
