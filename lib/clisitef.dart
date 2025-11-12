@@ -1,0 +1,72 @@
+
+
+import 'package:flutter/services.dart';
+
+class SiTefService {
+  static const platform = MethodChannel('clisitef_channel');
+
+  Future<bool> configurarSitef({
+    required String ip,
+    required String loja,
+    required String terminal,
+  }) async {
+    try {
+      await platform.invokeMethod('configurarSitef', {
+        'ip': ip,
+        'loja': loja,
+        'terminal': terminal,
+      });
+      print("CONFIG OK!");
+      return true;
+    } catch (e) {
+      print("Erro ao configurar: $e");
+      return false;
+    }
+  }
+
+  Future<void> enviarTrace() async {
+    try {
+      await platform.invokeMethod('enviarTrace');
+    } catch (e) {
+      print("Erro ao enviar Trace: $e");
+    }
+  }
+
+  Future<String?> iniciarPagamento({required String valor, String modalidade = "0"}) async {
+    try{
+      final String result = await platform.invokeMethod(
+          'iniciarPagamento',
+          {
+            'valor': valor,
+            'modalidade': modalidade
+          },
+      );
+      print("Resultado do Payment: $result");
+      return result;
+    } on PlatformException catch (e) {
+      print("Erro na transaçõa");
+      return null;
+    }
+  }
+
+  Future<String?> verificarPendencias() async {
+    try {
+      final String result = await platform.invokeMethod('verificarPendencias');
+      return result;
+    } catch (e) {
+      print("Erro ao verificar pendências: $e");
+      return null;
+    }
+  }
+
+  // 🔧 Menu Administrativo
+  Future<void> abrirAdmin() async {
+    try {
+      await platform.invokeMethod('abrirAdmin');
+    } catch (e) {
+      print("Erro ao abrir admin: $e");
+    }
+  }
+
+
+}

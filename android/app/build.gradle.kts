@@ -37,9 +37,15 @@ android {
         }
     }
 
+    // ✅ CONFIGURAÇÃO CORRIGIDA - APENAS ISSO!
     packaging {
         jniLibs {
-            keepDebugSymbols.add("**/libclisitef.so")
+            keepDebugSymbols.addAll(listOf(
+                "**/libclisitef.so",
+                "**/libgsurf_rsa.so",
+                "**/libssl.so",
+                "**/libtlswnb.so"
+            ))
             useLegacyPackaging = true
         }
         resources {

@@ -57,9 +57,17 @@ public class MainActivity extends FlutterActivity {
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
                 .setMethodCallHandler((call, result) -> {
                     switch (call.method) {
+                        case "configurarSitef":
+                            String ip = call.argument("ip");
+                            String loja = call.argument("loja");
+                            String terminal = call.argument("terminal");
+                            configurarSitef(ip, loja, terminal, result);
+                            break;
+
                         case "iniciarPagamento":
+                            String valor = call.argument("valor");
                             String modalidade = call.argument("modalidade");
-                            iniciarTransacao(modalidade, result);
+                            iniciarTransacao(modalidade, valor, result);
                             break;
 
                         case "verificarPendencias":
@@ -67,11 +75,11 @@ public class MainActivity extends FlutterActivity {
                             break;
 
                         case "abrirAdmin":
-                            iniciarTransacao("110", result);
+                            iniciarTransacao("110", "0", result);
                             break;
 
                         case "enviarTrace":
-                            iniciarTransacao("121", result);
+                            iniciarTransacao("121", "0", result);
                             break;
 
                         default:
@@ -80,13 +88,52 @@ public class MainActivity extends FlutterActivity {
                 });
     }
 
-    private void iniciarTransacao(String modalidade, MethodChannel.Result result) {
-        Intent intent = new Intent(MainActivity.this, ClisitefControllerActivity.class);
-        intent.putExtra(TextsSharedPreferences.TEXT_MODALIDADE.getValor(), modalidade);
-        startActivity(intent);
-        result.success("Transação iniciada");
+    // ⚙️ Método: Configurar SiTef
+    private void configurarSitef(String ip, String loja, String terminal, MethodChannel.Result result) {
+        try {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(TextsSharedPreferences.TEXT_ENDERECO_SITEF.getValor(), ip);
+            editor.putString(TextsSharedPreferences.TEXT_CODIGO_LOJA.getValor(), loja);
+            editor.putString(TextsSharedPreferences.TEXT_NUMERO_TERMINAL.getValor(), terminal);
+
+            // ✅ VALORES PADRÃO OBRIGATÓRIOS
+            // Gerar cupom fiscal único baseado em timestamp
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            editor.putString(TextsSharedPreferences.TEXT_CUPOM_FISCAL.getValor(), timestamp);
+            editor.putString(TextsSharedPreferences.TEXT_OPERADOR.getValor(), "0001");
+            editor.putString(TextsSharedPreferences.TEXT_RESTRICOES.getValor(), "");
+
+            editor.apply();
+
+            result.success("Configuração salva com sucesso");
+        } catch (Exception e) {
+            result.error("ERRO", "Erro ao salvar configuração: " + e.getMessage(), null);
+        }
     }
 
+
+    // 💳 Método: Iniciar Transação
+    private void iniciarTransacao(String modalidade, String valor, MethodChannel.Result result) {
+        try {
+            // Salvar valor no SharedPreferences
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(TextsSharedPreferences.TEXT_VALOR.getValor(), valor);
+            editor.putString(TextsSharedPreferences.TEXT_MODALIDADE.getValor(), modalidade);
+            editor.apply();
+
+            // Iniciar ClisitefControllerActivity
+            Intent intent = new Intent(MainActivity.this, ClisitefControllerActivity.class);
+            intent.putExtra(TextsSharedPreferences.TEXT_MODALIDADE.getValor(), modalidade);
+            startActivity(intent);
+
+            result.success("Transação iniciada");
+
+        } catch (Exception e) {
+            result.error("ERRO", "Erro ao iniciar transação: " + e.getMessage(), null);
+        }
+    }
+
+    // 🔍 Método: Verificar Pendências
     private void verificarTransacoesPendentes(MethodChannel.Result result) {
         if (sharedPreferences.contains(TextsSharedPreferences.TEXT_DATA_FISCAL.getValor())) {
             try {
@@ -99,7 +146,7 @@ public class MainActivity extends FlutterActivity {
                     Intent intent = new Intent(MainActivity.this, ClisitefControllerActivity.class);
                     intent.putExtra("abortarTransacao", true);
                     startActivity(intent);
-                    result.success("Transações pendentes encontradas: " + returnPendingTransactions);
+                    result.success("Transações pendentes: " + returnPendingTransactions);
                 } else {
                     result.success("Nenhuma transação pendente");
                 }
@@ -110,4 +157,21 @@ public class MainActivity extends FlutterActivity {
             result.success("Nenhuma transação registrada");
         }
     }
+
+    // ❌ Método: Cancelar Transação
+    private void cancelarTransacao(String nsu, String data, MethodChannel.Result result) {
+        try {
+            Intent intent = new Intent(MainActivity.this, ClisitefControllerActivity.class);
+            intent.putExtra(TextsSharedPreferences.TEXT_MODALIDADE.getValor(), "200"); // Cancelamento
+            intent.putExtra("nsu", nsu);
+            intent.putExtra("data", data);
+            startActivity(intent);
+
+            result.success("Cancelamento iniciado");
+        } catch (Exception e) {
+            result.error("ERRO", "Erro ao cancelar: " + e.getMessage(), null);
+        }
+    }
+
+
 }

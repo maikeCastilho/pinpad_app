@@ -25,7 +25,8 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
-
+import android.os.Handler;
+import android.os.Looper;
 import br.com.softwareexpress.sitef.android.CliSiTef;
 import br.com.softwareexpress.sitef.android.ICliSiTefListener;
 
@@ -40,22 +41,18 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-            // ✅ SEM setContentView - Flutter cuida disso
-
             DateTime dateTime = new DateTime();
             textDate = dateTime.getCurrentDate();
             textTime = dateTime.getCurrentTime();
 
-            sharedPreferences = getSharedPreferences(
-                    TextsSharedPreferences.TEXT_NOME_SHARED.getValor(),
-                    MODE_PRIVATE
-            );
+            sharedPreferences = getSharedPreferences(TextsSharedPreferences.TEXT_NOME_SHARED.getValor(),
+                    MODE_PRIVATE);
 
-            // Instanciar CliSiTef
+            // TODO: Instanciando a classe CliSITef.
             clisitef = new CliSiTef(this.getApplicationContext());
             clisitef.setActivity(this);
 
-            // Parâmetros adicionais
+            // TODO: Concatenar aqui todos os dados do paramAdicionais.
             String paramAdicionais = "[TipoComunicacaoExterna="
                     + sharedPreferences.getString(
                     TextsSharedPreferences.TEXT_COM_EXTERNA.getValor(), "")
@@ -65,12 +62,14 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                     TextsSharedPreferences.TEXT_CNPJ_FACILITADOR.getValor(), "") + "]";
 
             if(sharedPreferences.contains(TextsSharedPreferences.TEXT_PARAMETROS_ADICIONAIS.getValor()))
+                // Caso passar o param adicinais pelo app, será desconsiderado o default.
                 paramAdicionais = sharedPreferences.getString(
                         TextsSharedPreferences.TEXT_PARAMETROS_ADICIONAIS.getValor(), "");
 
-            // Abortar transação pendente
+            // TODO: Abortar Transação caso tenha transação pendentes.
             if (getIntent().getBooleanExtra("abortarTransacao", false)) {
                 clisitef.finishTransaction(this,
+                        // Caso queira aceitar a trasnação, basta mudar o ENUM.
                         Transaction.CANCELAR_TRANSACAO.getValor(),
                         sharedPreferences.getString(
                                 TextsSharedPreferences.TEXT_CUPOM_FISCAL.getValor(), ""),
@@ -84,12 +83,10 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                 Toast.makeText(this, "Transações Pendentes Canceladas.", Toast.LENGTH_SHORT).show();
             }
 
-            // Modalidade
-            int textModalidade = Integer.parseInt(
-                    getIntent().getStringExtra(TextsSharedPreferences.TEXT_MODALIDADE.getValor())
-            );
+            // Pegando o campo da modalidade e convertendo em int.
+            int textModalidade = Integer.parseInt(getIntent().getStringExtra("textModalidade"));
 
-            // Configurar CliSiTef
+            // TODO: Pegando o retorno do médoo Configure.
             int returnConfig = clisitef.configure(
                     sharedPreferences.getString(
                             TextsSharedPreferences.TEXT_ENDERECO_SITEF.getValor(), ""),
@@ -99,6 +96,7 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                             TextsSharedPreferences.TEXT_NUMERO_TERMINAL.getValor(), ""),
                     paramAdicionais);
 
+            // TODO: Caso o retorno seja igual a 0, ele continuará.
             if (returnConfig == Transaction.RETORNO_CONFIGURE.getValor()) {
                 int returnStartTransaction = clisitef.startTransaction(
                         this,
@@ -113,29 +111,38 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                                 TextsSharedPreferences.TEXT_OPERADOR.getValor(), ""),
                         sharedPreferences.getString(
                                 TextsSharedPreferences.TEXT_RESTRICOES.getValor(), ""));
-
                 if (returnStartTransaction != Transaction.RETORNO_START_TRANSACTION.getValor()) {
-                    Toast.makeText(this, "Erro na startTransaction", Toast.LENGTH_SHORT).show();
+                    // TODO: Caso seja diferente de 0, ele acabará
+                    Toast.makeText(this, "Erro na startTransaction",
+                            Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(ClisitefControllerActivity.this,
+                            MainActivity.class));
                     finish();
                 }
             } else {
+                // TODO: Caso seja diferente de 0, ele acabará
                 Toast.makeText(this, "Erro na configuração", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(ClisitefControllerActivity.this,
+                        MainActivity.class));
                 finish();
             }
 
-            // Desativar botão voltar
             getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
                 @Override
                 public void handleOnBackPressed() {
-                    // Bloqueado durante transação
+                    // Desativando o botão de voltar.
                 }
             });
         } catch (Exception e) {
-            Log.e("ClisitefController", "Erro no onCreate: " + e.getMessage());
-            Toast.makeText(this, "Erro inesperado: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.d("Erro", "Messege: " + e);
+            Toast.makeText(this, "Ocorreu um erro inesperado, verifique os logs.",
+                    Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(ClisitefControllerActivity.this,
+                    MainActivity.class));
             finish();
         }
     }
+
 
     @Override
     public void onData(int currentStage, int command, int fieldId, int minLength, int maxLength, byte[] input) {
@@ -144,16 +151,15 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                 if (fieldId == Transaction.CAMPO_COMPROVANTE_CLIENTE.getValor()
                         || fieldId == Transaction.CAMPO_COMPROVANTE_ESTAB.getValor()) {
                     showConfirmationDialog(clisitef.getBuffer());
-                } else {
-                    clisitef.continueTransaction("");
                 }
+                else
+                    clisitef.continueTransaction("");
                 break;
 
             case CliSiTef.CMD_SHOW_MSG_CASHIER:
             case CliSiTef.CMD_SHOW_MSG_CUSTOMER:
             case CliSiTef.CMD_SHOW_MSG_CASHIER_CUSTOMER:
-                showMessageDialog(clisitef.getBuffer());
-                clisitef.continueTransaction("");
+                clisitef.continueTransaction("Insira ou Aproxime o cartão!");
                 break;
 
             case CliSiTef.CMD_SHOW_MENU_TITLE:
@@ -167,7 +173,6 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
             case CliSiTef.CMD_CLEAR_MSG_CASHIER_CUSTOMER:
             case CliSiTef.CMD_CLEAR_MENU_TITLE:
             case CliSiTef.CMD_CLEAR_HEADER:
-                dismissCurrentDialog();
                 clisitef.continueTransaction("");
                 break;
 
@@ -196,7 +201,6 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                 break;
 
             case CliSiTef.CMD_REMOVE_QRCODE_FIELD:
-                dismissCurrentDialog();
                 clisitef.continueTransaction("");
                 break;
 
@@ -206,21 +210,24 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
         }
     }
 
+
     @Override
     public void onTransactionResult(int currentStage, int resultCode) {
         if (currentStage == 1 && resultCode == 0) {
             try {
                 clisitef.finishTransaction(1);
 
-                // Salvar data da transação
+                // TODO: Salvando a data da transação feita para verificar se há transação pendete.
                 SharedPreferences.Editor edit = sharedPreferences.edit();
                 edit.putString(TextsSharedPreferences.TEXT_DATA_FISCAL.getValor(), textDate);
                 edit.putString(TextsSharedPreferences.TEXT_HORARIO.getValor(), textTime);
                 edit.apply();
 
+                startActivity(new Intent(ClisitefControllerActivity.this,
+                        MainActivity.class));
                 finish();
             } catch (Exception e) {
-                Log.e("ClisitefController", "Erro no finishTransaction: " + e.getMessage());
+                Log.d("Erro", "Messege: " + e);
                 finish();
             }
         } else if (currentStage == 2 && resultCode == 0) {
@@ -236,10 +243,13 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
             }
         } else {
             if (resultCode != 0) {
+                startActivity(new Intent(ClisitefControllerActivity.this,
+                        MainActivity.class));
                 finish();
             }
         }
     }
+
 
     // ✅ MÉTODOS DE DIALOG ADAPTADOS (sem XML)
 
@@ -377,4 +387,29 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
         super.onPause();
         isActivityRunning = false;
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        Log.d("ClisitefController", "🔴 onDestroy() - Limpando recursos");
+
+        // Fechar dialogs abertos
+        dismissCurrentDialog();
+
+        // Limpar CliSiTef
+        if (clisitef != null) {
+            try {
+                // Tentar abortar qualquer transação pendente
+                clisitef.abortTransaction(-1);
+                clisitef.setActivity(null);
+                clisitef = null;
+            } catch (Exception e) {
+                Log.e("ClisitefController", "Erro ao limpar CliSiTef: " + e.getMessage());
+            }
+        }
+
+        isActivityRunning = false;
+    }
+
 }
