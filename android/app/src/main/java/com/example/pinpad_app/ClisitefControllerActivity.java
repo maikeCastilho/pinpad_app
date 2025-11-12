@@ -146,6 +146,8 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
 
     @Override
     public void onData(int currentStage, int command, int fieldId, int minLength, int maxLength, byte[] input) {
+        Log.d("Command", "Last Command: " + command);
+
         switch (command) {
             case CliSiTef.CMD_RESULT_DATA:
                 if (fieldId == Transaction.CAMPO_COMPROVANTE_CLIENTE.getValor()
@@ -159,7 +161,7 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
             case CliSiTef.CMD_SHOW_MSG_CASHIER:
             case CliSiTef.CMD_SHOW_MSG_CUSTOMER:
             case CliSiTef.CMD_SHOW_MSG_CASHIER_CUSTOMER:
-                clisitef.continueTransaction("Insira ou Aproxime o cartão!");
+                clisitef.continueTransaction("");
                 break;
 
             case CliSiTef.CMD_SHOW_MENU_TITLE:
@@ -213,24 +215,37 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
 
     @Override
     public void onTransactionResult(int currentStage, int resultCode) {
+        Log.d("ClisitefController", "=== onTransactionResult ===");
+        Log.d("ClisitefController", "CurrentStage: " + currentStage);
+        Log.d("ClisitefController", "ResultCode: " + resultCode);
+
         if (currentStage == 1 && resultCode == 0) {
             try {
+                Log.d("ClisitefController", "✅ Transação aprovada! Finalizando...");
+
                 clisitef.finishTransaction(1);
 
-                // TODO: Salvando a data da transação feita para verificar se há transação pendete.
+                // Salvar data da transação
                 SharedPreferences.Editor edit = sharedPreferences.edit();
                 edit.putString(TextsSharedPreferences.TEXT_DATA_FISCAL.getValor(), textDate);
                 edit.putString(TextsSharedPreferences.TEXT_HORARIO.getValor(), textTime);
                 edit.apply();
 
-                startActivity(new Intent(ClisitefControllerActivity.this,
-                        MainActivity.class));
-                finish();
+                // ⏱️ DELAY ANTES DE FECHAR (dar tempo de mostrar comprovante)
+                Toast.makeText(this, "✅ Transação concluída!", Toast.LENGTH_SHORT).show();
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    Log.d("ClisitefController", "Fechando Activity após sucesso");
+                    finish();
+                }, 2000); // 2 segundos de delay
+
             } catch (Exception e) {
-                Log.d("Erro", "Messege: " + e);
+                Log.e("ClisitefController", "❌ Erro no finishTransaction: " + e.getMessage());
                 finish();
             }
         } else if (currentStage == 2 && resultCode == 0) {
+            Log.d("ClisitefController", "Stage 2 - Aguardando confirmação");
+
             if (!isDialogShown) {
                 isDialogShown = true;
                 runOnUiThread(() -> {
@@ -238,14 +253,20 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                         showConfirmationDialog(clisitef.getBuffer());
                     } else {
                         isDialogShown = false;
+                        finish();
                     }
                 });
             }
         } else {
             if (resultCode != 0) {
-                startActivity(new Intent(ClisitefControllerActivity.this,
-                        MainActivity.class));
-                finish();
+                Log.e("ClisitefController", "❌ Transação falhou! ResultCode: " + resultCode);
+                Toast.makeText(this, "Transação cancelada (código: " + resultCode + ")",
+                        Toast.LENGTH_LONG).show();
+
+                // Delay antes de fechar em caso de erro também
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    finish();
+                }, 3000);
             }
         }
     }

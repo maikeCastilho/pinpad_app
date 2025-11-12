@@ -82,28 +82,28 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 10),
 
-            // ElevatedButton.icon(
-            //   onPressed: () async {
-            //     // 1️⃣ PRIMEIRO: Configurar
-            //     print("🔧 Configurando...");
-            //     await _sitef.configurarSitef(
-            //       ip: "172.30.0.92",
-            //       loja: "00000000",
-            //       terminal: "SX000001",
-            //     );
-            //
-            //     // 2️⃣ SEGUNDO: Enviar Trace
-            //     print("📡 Enviando Trace...");
-            //     await _sitef.enviarTrace();
-            //   },
-            //   style: ElevatedButton.styleFrom(
-            //     minimumSize: const Size(double.infinity, 50),
-            //   ),
-            //   icon: const Icon(Icons.sync),
-            //   label: const Text('Configurar + Enviar Trace'),
-            // ),
-            //
-            // const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: () async {
+                // 1️⃣ PRIMEIRO: Configurar
+                print("🔧 Configurando...");
+                await _sitef.configurarSitef(
+                  ip: "172.30.0.92",
+                  loja: "00000000",
+                  terminal: "SX000001",
+                );
+
+                // 2️⃣ SEGUNDO: Enviar Trace
+                print("📡 Enviando Trace...");
+                await _sitef.enviarTrace();
+              },
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              icon: const Icon(Icons.sync),
+              label: const Text('Configurar + Enviar Trace'),
+            ),
+
+            const SizedBox(height: 10),
 
             // Botão Pagamento
             ElevatedButton.icon(
