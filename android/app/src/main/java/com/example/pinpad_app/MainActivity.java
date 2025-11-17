@@ -11,15 +11,22 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import io.flutter.plugin.common.EventChannel;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 
 import com.example.pinpad_app.enums.TextsSharedPreferences;
 import br.com.softwareexpress.sitef.android.CliSiTef;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainActivity extends FlutterActivity {
-    private static final String CHANNEL = "clisitef_channel";
+    private static final String METHOD_CHANNEL = "clisitef_channel";
+    private static final String EVENT_CHANNEL = "clisitef_events";
+    private static EventChannel.EventSink eventSink;
     private CliSiTef clisitef;
     private SharedPreferences sharedPreferences;
 
@@ -55,7 +62,7 @@ public class MainActivity extends FlutterActivity {
     public void configureFlutterEngine(FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
 
-        new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
+        new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), METHOD_CHANNEL)
                 .setMethodCallHandler((call, result) -> {
                     switch (call.method) {
                         case "configurarSitef":
@@ -83,10 +90,46 @@ public class MainActivity extends FlutterActivity {
                             iniciarTransacao("121", "0", result);
                             break;
 
+                        case "testarConexao":
+                            iniciarTransacao("111", "0", result);
+                            break;
+
                         default:
                             result.notImplemented();
                     }
                 });
+
+
+        new EventChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), EVENT_CHANNEL)
+                .setStreamHandler(new EventChannel.StreamHandler() {
+                    @Override
+                    public void onListen(Object arguments, EventChannel.EventSink events) {
+                        eventSink = events;
+                        Log.d("EventChanel", "Flutter começou a escutar eventos");
+                    }
+
+                    @Override
+                    public void onCancel(Object arguments) {
+                        eventSink = null;
+                        Log.d("EventChannel", "Flutter parou de escutar eventos");
+                    }
+        });
+    }
+
+    public static void sendEvent(String type, Object data) {
+        if (eventSink != null) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("type", type);
+            event.put("data", data);
+            event.put("timestamp", System.currentTimeMillis());
+
+            eventSink.success(event);
+
+            Log.d("EventChannel", "Evento enviado: " + type);
+
+        } else {
+            Log.w("EventChannel", "EventSink é null - Flutter não está escutando");
+        }
     }
 
     // ⚙️ Método: Configurar SiTef

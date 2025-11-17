@@ -59,7 +59,7 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:theme="@style/TransparentActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize" />
 
         <meta-data

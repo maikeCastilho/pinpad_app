@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 class SiTefService {
   static const platform = MethodChannel('clisitef_channel');
 
+
   Future<bool> configurarSitef({
     required String ip,
     required String loja,
@@ -14,8 +15,6 @@ class SiTefService {
         'loja': loja,
         'terminal': terminal,
       });
-
-      print("CONFIG OK!");
 
       return true;
 
@@ -45,8 +44,7 @@ class SiTefService {
       print("Resultado do Payment: $result");
       return result;
     } on PlatformException catch (e) {
-      print("Erro na transaçõa");
-      return null;
+      return e.message;
     }
   }
 
@@ -56,7 +54,7 @@ class SiTefService {
       return result;
     } catch (e) {
       print("Erro ao verificar pendências: $e");
-      return null;
+      return e.toString();
     }
   }
 
@@ -66,7 +64,7 @@ class SiTefService {
       return result;
     } catch (e) {
       print("Erro ao verificar pendências: $e");
-      return null;
+      return e.toString();
     }
   }
 
@@ -79,5 +77,11 @@ class SiTefService {
     }
   }
 
-
+  Future<void> testarComunicacao() async {
+    try{
+      await platform.invokeMethod('testarConexao');
+    } catch (e) {
+      print("Erro ao testar a comunicacao");
+    }
+  }
 }

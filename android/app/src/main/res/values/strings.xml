@@ -1,0 +1,46 @@
+<resources>
+    <string name="app_name">CliSiTef Exemplo</string>
+    <string name="title">Fiserv</string>
+    <string name="description">Escolha uma das opções abaixo</string>
+    <string name="descriptionConfig">Preencha os campos abaixo</string>
+    <string name="buttonPagamento">Pagamento</string>
+    <string name="buttonAdmin">Administrador</string>
+    <string name="buttonTLSFiserv">TLS Fiserv</string>
+    <string name="buttonTrace">Enviar Trace</string>
+    <string name="descriptionConfigBottom">Este é um aplicativo de demonstração </string>
+
+    <string name="next">Próximo</string>
+
+    <string name="switchParametrosAdicionais">Parâmetros Adicionais</string>
+    <string name="textInputLayoutEmpresaSiTef">empresaSitef</string>
+    <string name="textInputLayoutEnderecoSiTef">enderecoSitef</string>
+    <string name="textInputLayoutModalidade">modalide</string>
+    <string name="textInputLayoutCNPJorCPF">CNPJ_CPF</string>
+    <string name="textInputLayoutValor">Valor</string>
+
+    <string name="textInputLayoutTLSUsado">tipoComunicacaoExterna</string>
+    <string name="textInputLayoutIsDoubleValidation">isDoubleValidation</string>
+    <string name="textInputLayoutCnpjAutomacao">cnpj_automacao</string>
+    <string name="textInputLayoutCnpjFacilitador">cnpj_facilitador</string>
+    <string name="textInputLayoutTipoPinpad">tipoPinpad</string>
+
+    <string name="textInputLayoutParamAdicionais">parametroAdicionais</string>
+    <string name="textInputLayoutTerminalSiTef">terminalSitef</string>
+    <string name="textInputLayoutRestricoes">restricoes</string>
+    <string name="textInputLayoutOperador">operador</string>
+    <string name="textInputLayoutNumeroParecela">numParcelas</string>
+    <string name="textInputLayoutOtp">Otp</string>
+    <string name="textInputLayoutTransacoesHabilitadas">transacoesHabilitadas</string>
+    <string name="textInputLayoutPinpadMac">pinpadMac</string>
+    <string name="textInputLayoutTimemoutColeta">timeoutColeta</string>
+    <string name="textInputLayoutAcessibilidadeVisual">acessibilidadeVisual</string>
+    <string name="textInputLayoutDadosSubAdqui">dadosSubAdqui</string>
+    <string name="textInputLayoutTipoCampos">tipoCampos</string>
+    <string name="textInputLayoutHabilitaColetaTaxaEmbarqueIATA">habilitaColetaTaxaEmbarqueIATA</string>
+    <string name="textInputLayoutHabilitaColetaValorEntradaIATA">habilitaColetaValorEntradaIATA</string>
+    <string name="textInputLayoutClsit">clsit</string>
+
+    <string name="textViewMessage">Carregando...</string>
+    <string name="editTextInputDialog">Preencha aqui</string>
+    <string name="cancelar">Cancelar</string>
+</resources>

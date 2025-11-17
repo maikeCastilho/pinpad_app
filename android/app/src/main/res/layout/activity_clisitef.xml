@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:padding="24dp">
+
+    <!-- ✅ Ícone no topo -->
+
+    <!-- ✅ Mensagem Centralizada -->
+
+    <ImageView
+        android:id="@+id/iconStatus"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="100dp"
+        android:src="@android:drawable/ic_dialog_info"
+        android:tint="#2196F3" />
+
+    <TextView
+        android:id="@+id/textViewMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/iconStatus"
+        android:layout_marginTop="40dp"
+        android:gravity="center"
+        android:text="Aguardando..."
+        android:textColor="#333333"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+    <!-- ✅ Submensagem (opcional) -->
+    <TextView
+        android:id="@+id/textViewSubMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textViewMessage"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#666666" />
+
+    <!-- ✅ ProgressBar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textViewSubMessage"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp" />
+
+</RelativeLayout>

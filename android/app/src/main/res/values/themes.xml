@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.PosAndroidTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/color_fiserv</item>
+        <item name="colorPrimaryVariant">@color/color_fiserv</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorAccent">@color/color_fiserv</item>
+        <item name="android:textColor">@android:color/darker_gray</item>
+        <item name="android:editTextColor">@android:color/darker_gray</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" type="color">?attr/colorOnSecondary</item>
+    </style>
+</resources>
