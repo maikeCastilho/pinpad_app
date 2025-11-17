@@ -5,12 +5,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -25,8 +25,7 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
-import android.os.Handler;
-import android.os.Looper;
+
 import br.com.softwareexpress.sitef.android.CliSiTef;
 import br.com.softwareexpress.sitef.android.ICliSiTefListener;
 
@@ -35,18 +34,22 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
     private CliSiTef clisitef;
     private String textDate, textTime, textTitle;
     private SharedPreferences sharedPreferences;
-    private AlertDialog currentDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
+            //setContentView(R.layout.activity_clisitef);
+
             DateTime dateTime = new DateTime();
             textDate = dateTime.getCurrentDate();
             textTime = dateTime.getCurrentTime();
 
             sharedPreferences = getSharedPreferences(TextsSharedPreferences.TEXT_NOME_SHARED.getValor(),
                     MODE_PRIVATE);
+
+            //textViewMessage = findViewById(R.id.textViewMessage);
+            //Button buttonCancelar = findViewById(R.id.buttonCancelar);
 
             // TODO: Instanciando a classe CliSITef.
             clisitef = new CliSiTef(this.getApplicationContext());
@@ -127,6 +130,15 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                 finish();
             }
 
+//            buttonCancelar.setOnClickListener(v -> {
+//                try {
+//                    clisitef.finishTransaction(0);
+//                } catch (Exception e) {
+//                    Log.d("Erro", "Messege: " + e);
+//                    throw new RuntimeException(e);
+//                }
+//            });
+
             getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
                 @Override
                 public void handleOnBackPressed() {
@@ -146,8 +158,6 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
 
     @Override
     public void onData(int currentStage, int command, int fieldId, int minLength, int maxLength, byte[] input) {
-        Log.d("Command", "Last Command: " + command);
-
         switch (command) {
             case CliSiTef.CMD_RESULT_DATA:
                 if (fieldId == Transaction.CAMPO_COMPROVANTE_CLIENTE.getValor()
@@ -197,10 +207,10 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                 showConfirmationDialog(clisitef.getBuffer());
                 break;
 
-            case CliSiTef.CMD_SHOW_QRCODE_FIELD:
-                showQRCodeDialog(clisitef.getBuffer());
-                clisitef.continueTransaction("");
-                break;
+//            case CliSiTef.CMD_SHOW_QRCODE_FIELD:
+//                showQRCodeDialog(clisitef.getBuffer());
+//                clisitef.continueTransaction("");
+//                break;
 
             case CliSiTef.CMD_REMOVE_QRCODE_FIELD:
                 clisitef.continueTransaction("");
@@ -212,40 +222,26 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
         }
     }
 
-
     @Override
     public void onTransactionResult(int currentStage, int resultCode) {
-        Log.d("ClisitefController", "=== onTransactionResult ===");
-        Log.d("ClisitefController", "CurrentStage: " + currentStage);
-        Log.d("ClisitefController", "ResultCode: " + resultCode);
-
         if (currentStage == 1 && resultCode == 0) {
             try {
-                Log.d("ClisitefController", "✅ Transação aprovada! Finalizando...");
-
                 clisitef.finishTransaction(1);
 
-                // Salvar data da transação
+                // TODO: Salvando a data da transação feita para verificar se há transação pendete.
                 SharedPreferences.Editor edit = sharedPreferences.edit();
                 edit.putString(TextsSharedPreferences.TEXT_DATA_FISCAL.getValor(), textDate);
                 edit.putString(TextsSharedPreferences.TEXT_HORARIO.getValor(), textTime);
                 edit.apply();
 
-                // ⏱️ DELAY ANTES DE FECHAR (dar tempo de mostrar comprovante)
-                Toast.makeText(this, "✅ Transação concluída!", Toast.LENGTH_SHORT).show();
-
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    Log.d("ClisitefController", "Fechando Activity após sucesso");
-                    finish();
-                }, 2000); // 2 segundos de delay
-
+                startActivity(new Intent(ClisitefControllerActivity.this,
+                        MainActivity.class));
+                finish();
             } catch (Exception e) {
-                Log.e("ClisitefController", "❌ Erro no finishTransaction: " + e.getMessage());
+                Log.d("Erro", "Messege: " + e);
                 finish();
             }
         } else if (currentStage == 2 && resultCode == 0) {
-            Log.d("ClisitefController", "Stage 2 - Aguardando confirmação");
-
             if (!isDialogShown) {
                 isDialogShown = true;
                 runOnUiThread(() -> {
@@ -253,148 +249,98 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
                         showConfirmationDialog(clisitef.getBuffer());
                     } else {
                         isDialogShown = false;
-                        finish();
                     }
                 });
             }
         } else {
             if (resultCode != 0) {
-                Log.e("ClisitefController", "❌ Transação falhou! ResultCode: " + resultCode);
-                Toast.makeText(this, "Transação cancelada (código: " + resultCode + ")",
-                        Toast.LENGTH_LONG).show();
-
-                // Delay antes de fechar em caso de erro também
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    finish();
-                }, 3000);
+                startActivity(new Intent(ClisitefControllerActivity.this,
+                        MainActivity.class));
+                finish();
             }
         }
     }
 
-
-    // ✅ MÉTODOS DE DIALOG ADAPTADOS (sem XML)
-
-    private void showMessageDialog(String message) {
-        runOnUiThread(() -> {
-            dismissCurrentDialog();
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(message);
-            builder.setCancelable(false);
-            currentDialog = builder.show();
-        });
-    }
-
     private void showMenuDialog(String message) {
-        runOnUiThread(() -> {
-            dismissCurrentDialog();
-            String[] items = message.split(";");
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecione uma opção");
-            builder.setCancelable(false);
-            builder.setItems(items, (dialog, which) -> {
-                String selectedItem = items[which];
-                clisitef.continueTransaction(selectedItem);
-            });
-            builder.setNegativeButton("Cancelar", (dialog, which) -> {
-                clisitef.abortTransaction(-1);
-                finish();
-            });
-            currentDialog = builder.show();
+        showDialog(message.split(";"), (dialog, which) -> {
+            String selectedItem = message.split(";")[which];
+            clisitef.continueTransaction(selectedItem);
         });
     }
 
     private void showConfirmationDialog(String message) {
-        runOnUiThread(() -> {
-            dismissCurrentDialog();
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(message);
-            builder.setCancelable(false);
-            builder.setPositiveButton("Continuar", (dialog, which) -> {
-                clisitef.continueTransaction("0");
-                isDialogShown = false;
-            });
-            builder.setNegativeButton("Cancelar", (dialog, which) -> {
-                clisitef.abortTransaction(-1);
-                isDialogShown = false;
-                finish();
-            });
-            currentDialog = builder.show();
+        showDialog(new String[]{message}, (dialog, which) -> {
+            clisitef.continueTransaction("" + which);
+            isDialogShown = false;
         });
     }
 
     private void setFields(String title) {
-        runOnUiThread(() -> {
-            dismissCurrentDialog();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setCancelable(false);
 
-            // Criar EditText programaticamente
-            EditText editText = new EditText(this);
-            editText.setInputType(InputType.TYPE_CLASS_TEXT);
-            editText.setHint("Digite aqui");
+//        View view = getLayoutInflater().inflate(R.layout.input_dialog_view, null);
+//        builder.setView(view);
 
-            LinearLayout layout = new LinearLayout(this);
-            layout.setOrientation(LinearLayout.VERTICAL);
-            layout.setPadding(50, 20, 50, 20);
-            layout.addView(editText);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(title);
-            builder.setView(layout);
-            builder.setCancelable(false);
-            builder.setPositiveButton("Continuar", (dialog, which) -> {
-                clisitef.continueTransaction(editText.getText().toString());
-            });
-            builder.setNegativeButton("Cancelar", (dialog, which) -> {
-                clisitef.abortTransaction(-1);
-                finish();
-            });
-            currentDialog = builder.show();
+        builder.setPositiveButton("Continuar", (dialog, which) -> {
+//            EditText editText = view.findViewById(R.id.edtInputDialog);
+            clisitef.continueTransaction("editText.getText().toString()");
         });
+
+        builder.setNegativeButton("Cancelar", (dialog, which) -> {
+            clisitef.abortTransaction(-1);
+            startActivity(new Intent(ClisitefControllerActivity.this,
+                    MainActivity.class));
+            finish();
+        });
+
+        builder.show();
     }
 
-    private void showQRCodeDialog(String qrcode) {
-        runOnUiThread(() -> {
-            try {
-                dismissCurrentDialog();
+//    private void showQRCodeDialog(String qrcode) {
+//        try {
+//            DisplayMetrics metrics = new DisplayMetrics();
+//            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+//            int height = metrics.heightPixels;
+//            int width = metrics.widthPixels;
+//
+//            BitMatrix bitMatrix = new MultiFormatWriter().encode(qrcode, BarcodeFormat.QR_CODE,
+//                    width, height / 2);
+//            Bitmap bitmap = new BarcodeEncoder().createBitmap(bitMatrix);
+//
+//            View view = getLayoutInflater().inflate(R.layout.show_qrcode_dialog_view, null);
+//            ImageView imageView = view.findViewById(R.id.qrCode);
+//
+//            imageView.setImageBitmap(bitmap);
+//
+//            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//            builder.setView(view);
+//            builder.setNegativeButton("Cancelar", (dialog, which) -> clisitef.abortTransaction(-1));
+//            builder.show();
+//        } catch (WriterException e) {
+//            Log.d("Erro", "Messege: " + e);
+//            startActivity(new Intent(ClisitefControllerActivity.this, MainActivity.class));
+//            finish();
+//        }
+//    }
 
-                DisplayMetrics metrics = new DisplayMetrics();
-                getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                int height = metrics.heightPixels;
-                int width = metrics.widthPixels;
+    private void showDialog(String[] items, DialogInterface.OnClickListener positiveAction) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
 
-                BitMatrix bitMatrix = new MultiFormatWriter().encode(
-                        qrcode,
-                        BarcodeFormat.QR_CODE,
-                        width,
-                        height / 2
-                );
-                Bitmap bitmap = new BarcodeEncoder().createBitmap(bitMatrix);
-
-                ImageView imageView = new ImageView(this);
-                imageView.setImageBitmap(bitmap);
-                imageView.setPadding(20, 20, 20, 20);
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("QR Code");
-                builder.setView(imageView);
-                builder.setCancelable(false);
-                builder.setNegativeButton("Cancelar", (dialog, which) -> {
-                    clisitef.abortTransaction(-1);
-                    finish();
-                });
-                currentDialog = builder.show();
-            } catch (WriterException e) {
-                Log.e("ClisitefController", "Erro ao gerar QRCode: " + e.getMessage());
-                Toast.makeText(this, "Erro ao gerar QR Code", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        });
-    }
-
-    private void dismissCurrentDialog() {
-        if (currentDialog != null && currentDialog.isShowing()) {
-            currentDialog.dismiss();
-            currentDialog = null;
+        if (items.length == 1) {
+            builder.setMessage(items[0]);
+            builder.setPositiveButton("Continuar", positiveAction);
+        } else {
+            builder.setItems(items, positiveAction);
         }
+
+        builder.setNegativeButton("Cancelar", (dialog, which) -> {
+            clisitef.abortTransaction(-1);
+        });
+
+        builder.show();
     }
 
     @Override
@@ -408,29 +354,4 @@ public class ClisitefControllerActivity extends AppCompatActivity implements ICl
         super.onPause();
         isActivityRunning = false;
     }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        Log.d("ClisitefController", "🔴 onDestroy() - Limpando recursos");
-
-        // Fechar dialogs abertos
-        dismissCurrentDialog();
-
-        // Limpar CliSiTef
-        if (clisitef != null) {
-            try {
-                // Tentar abortar qualquer transação pendente
-                clisitef.abortTransaction(-1);
-                clisitef.setActivity(null);
-                clisitef = null;
-            } catch (Exception e) {
-                Log.e("ClisitefController", "Erro ao limpar CliSiTef: " + e.getMessage());
-            }
-        }
-
-        isActivityRunning = false;
-    }
-
 }

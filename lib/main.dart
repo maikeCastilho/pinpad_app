@@ -58,11 +58,10 @@ class _HomePageState extends State<HomePage> {
 
             ElevatedButton.icon(
               onPressed: () async {
-                print("SUPER");
-                await _sitef.configurarSitef(ip: "172.30.0.92", loja: "00000000", terminal: "");
+                await _sitef.configurarSitef(ip: "192.168.31.232", loja: "00000000", terminal: "SX000001");
               },
               icon: const Icon(Icons.payment),
-              label: const Text('Configurar Sitef!!!!'),
+              label: const Text('Configurar Sitef'),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
               ),
@@ -82,76 +81,56 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 10),
 
-            ElevatedButton.icon(
-              onPressed: () async {
-                // 1️⃣ PRIMEIRO: Configurar
-                print("🔧 Configurando...");
-                await _sitef.configurarSitef(
-                  ip: "172.30.0.92",
-                  loja: "00000000",
-                  terminal: "SX000001",
-                );
 
-                // 2️⃣ SEGUNDO: Enviar Trace
-                print("📡 Enviando Trace...");
-                await _sitef.enviarTrace();
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              icon: const Icon(Icons.sync),
-              label: const Text('Configurar + Enviar Trace'),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Botão Pagamento
-            ElevatedButton.icon(
-              onPressed: () async {
-                // ✅ VALIDAR VALOR
-                String valor = _valorController.text.trim();
-
-                if (valor.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('❌ Digite um valor!')),
-                  );
-                  return;
-                }
-
-                // ✅ GARANTIR QUE É APENAS NÚMEROS
-                if (!RegExp(r'^\d+$').hasMatch(valor)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('❌ Valor deve conter apenas números!')),
-                  );
-                  return;
-                }
-
-                // ✅ LIMITAR TAMANHO (máximo 10 dígitos = R$ 99.999.999,99)
-                if (valor.length > 10) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('❌ Valor muito grande!')),
-                  );
-                  return;
-                }
-
-                print("🔧 Configurando...");
-                await _sitef.configurarSitef(
-                  ip: "172.30.0.92",
-                  loja: "00000000",
-                  terminal: "SX000001",
-                );
-
-                print("💳 Iniciando pagamento: R\$ ${(int.parse(valor) / 100).toStringAsFixed(2)}");
-
-                await _sitef.iniciarPagamento(valor: valor);
-              },
-              icon: const Icon(Icons.payment),
-              label: const Text('Iniciar Pagamento'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            ),
-
+            //
+            // // Botão Pagamento
+            // ElevatedButton.icon(
+            //   onPressed: () async {
+            //     // ✅ VALIDAR VALOR
+            //     String valor = _valorController.text.trim();
+            //
+            //     if (valor.isEmpty) {
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         const SnackBar(content: Text('❌ Digite um valor!')),
+            //       );
+            //       return;
+            //     }
+            //
+            //     // ✅ GARANTIR QUE É APENAS NÚMEROS
+            //     if (!RegExp(r'^\d+$').hasMatch(valor)) {
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         const SnackBar(content: Text('❌ Valor deve conter apenas números!')),
+            //       );
+            //       return;
+            //     }
+            //
+            //     // ✅ LIMITAR TAMANHO (máximo 10 dígitos = R$ 99.999.999,99)
+            //     if (valor.length > 10) {
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         const SnackBar(content: Text('❌ Valor muito grande!')),
+            //       );
+            //       return;
+            //     }
+            //
+            //     print("🔧 Configurando...");
+            //
+            //     await _sitef.configurarSitef(
+            //       ip: "192.168.31.232",
+            //       loja: "00000000",
+            //       terminal: "SX000001",
+            //     );
+            //
+            //     print("💳 Iniciando pagamento: R\$ ${(int.parse(valor) / 100).toStringAsFixed(2)}");
+            //
+            //     await _sitef.iniciarPagamento(valor: valor);
+            //   },
+            //   icon: const Icon(Icons.payment),
+            //   label: const Text('Iniciar Pagamento'),
+            //   style: ElevatedButton.styleFrom(
+            //     minimumSize: const Size(double.infinity, 50),
+            //   ),
+            // ),
+            //
             const SizedBox(height: 10),
 
             // Botão Admin
@@ -165,27 +144,54 @@ class _HomePageState extends State<HomePage> {
                 minimumSize: const Size(double.infinity, 50),
               ),
             ),
+
             const SizedBox(height: 10),
 
             // Botão Verificar Pendências
-            // ElevatedButton.icon(
-            //   onPressed: () async {
-            //     final result = await _sitef.verificarPendencias();
-            //     if (mounted) {
-            //       ScaffoldMessenger.of(context).showSnackBar(
-            //         SnackBar(content: Text(result ?? 'Erro')),
-            //       );
-            //     }
-            //   },
-            //   icon: const Icon(Icons.check_circle),
-            //   label: const Text('Verificar Pendências'),
-            //   style: ElevatedButton.styleFrom(
-            //     minimumSize: const Size(double.infinity, 50),
-            //   ),
-            // ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final result = await _sitef.verificarPendencias();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(result ?? 'Erro')),
+                  );
+                }
+              },
+              icon: const Icon(Icons.check_circle),
+              label: const Text('Verificar Pendências'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
+
+
+
+
+
+
+// ElevatedButton.icon(
+// onPressed: () async {
+// // 1️⃣ PRIMEIRO: Configurar
+// print("🔧 Configurando...");
+//
+// await _sitef.configurarSitef(
+// ip: "192.168.31.777",
+// loja: "00000000",
+// terminal: "SX000001",
+// );
+// },
+//
+// style: ElevatedButton.styleFrom(
+// minimumSize: const Size(double.infinity, 50),
+// ),
+// icon: const Icon(Icons.sync),
+// label: const Text('Configurar + Enviar Trace'),
+// ),
+//
+// const SizedBox(height: 10),

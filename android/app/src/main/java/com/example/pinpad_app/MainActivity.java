@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -89,27 +90,46 @@ public class MainActivity extends FlutterActivity {
     }
 
     // ⚙️ Método: Configurar SiTef
+    // ⚙️ Método: Configurar SiTef
     private void configurarSitef(String ip, String loja, String terminal, MethodChannel.Result result) {
         try {
+            // ✅ Salvar configurações no SharedPreferences
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString(TextsSharedPreferences.TEXT_ENDERECO_SITEF.getValor(), ip);
             editor.putString(TextsSharedPreferences.TEXT_CODIGO_LOJA.getValor(), loja);
             editor.putString(TextsSharedPreferences.TEXT_NUMERO_TERMINAL.getValor(), terminal);
 
-            // ✅ VALORES PADRÃO OBRIGATÓRIOS
-            // Gerar cupom fiscal único baseado em timestamp
+            // Valores padrão obrigatórios
             String timestamp = String.valueOf(System.currentTimeMillis());
             editor.putString(TextsSharedPreferences.TEXT_CUPOM_FISCAL.getValor(), timestamp);
             editor.putString(TextsSharedPreferences.TEXT_OPERADOR.getValor(), "0001");
             editor.putString(TextsSharedPreferences.TEXT_RESTRICOES.getValor(), "");
-
             editor.apply();
 
-            result.success("Configuração salva com sucesso");
+            // ✅ CHAMAR CONFIGURE AQUI - UMA ÚNICA VEZ
+            String paramAdicionais = "[TipoComunicacaoExterna="
+                    + sharedPreferences.getString(
+                    TextsSharedPreferences.TEXT_COM_EXTERNA.getValor(), "")
+                    + ";ParmsClient=1=" + sharedPreferences.getString(
+                    TextsSharedPreferences.TEXT_CNPJ_AUTOMACAO.getValor(), "")
+                    + ";2=" + sharedPreferences.getString(
+                    TextsSharedPreferences.TEXT_CNPJ_FACILITADOR.getValor(), "") + "]";
+
+            int returnConfig = clisitef.configure(ip, loja, terminal, paramAdicionais);
+
+            Log.e("DATA-CONFIG", "IP:" + ip + "LOJA:" + loja + "TERM:" + terminal + "PARAMS:" + paramAdicionais);
+
+            if (returnConfig == 0) {
+                result.success("Configuração salva e CliSiTef configurado com sucesso");
+            } else {
+                result.error("ERRO_CONFIG", "Erro ao configurar CliSiTef: " + returnConfig, null);
+            }
+
         } catch (Exception e) {
             result.error("ERRO", "Erro ao salvar configuração: " + e.getMessage(), null);
         }
     }
+
 
 
     // 💳 Método: Iniciar Transação

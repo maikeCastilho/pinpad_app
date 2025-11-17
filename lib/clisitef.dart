@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/services.dart';
 
 class SiTefService {
@@ -16,8 +14,11 @@ class SiTefService {
         'loja': loja,
         'terminal': terminal,
       });
+
       print("CONFIG OK!");
+
       return true;
+
     } catch (e) {
       print("Erro ao configurar: $e");
       return false;
@@ -52,6 +53,16 @@ class SiTefService {
   Future<String?> verificarPendencias() async {
     try {
       final String result = await platform.invokeMethod('verificarPendencias');
+      return result;
+    } catch (e) {
+      print("Erro ao verificar pendências: $e");
+      return null;
+    }
+  }
+
+  Future<String?> cancelarTransacao() async {
+    try {
+      final String result = await platform.invokeMethod('cancelarTransacao');
       return result;
     } catch (e) {
       print("Erro ao verificar pendências: $e");
