@@ -61,21 +61,6 @@ class TransactionStatusCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildContent(),
               ],
-
-              // Loading indicator
-              if (isProcessing) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _getTextColor(),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -136,12 +121,15 @@ class TransactionStatusCard extends StatelessWidget {
   String _getTitle() {
     if (currentError.isNotEmpty) {
       return 'Erro na Transação';
+
     } else if (currentResult.isNotEmpty) {
       final success = currentResult['success'] as bool? ?? false;
       return success ? 'Transação Aprovada' : 'Transação Recusada';
+
     } else if (isProcessing) {
       return 'Processando...';
     }
+
     return 'Aguardando';
   }
 
@@ -156,7 +144,7 @@ class TransactionStatusCard extends StatelessWidget {
       return Text(
         currentError,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 15,
           color: Colors.grey.shade700,
         ),
         textAlign: TextAlign.left,
@@ -179,8 +167,10 @@ class TransactionStatusCard extends StatelessWidget {
       return Text(
         currentMessage,
         style: TextStyle(
-          fontSize: 14,
-          color: Colors.grey.shade700,
+          fontSize: 17,
+          fontWeight: FontWeight.bold,
+          color: Colors.blue,
+
         ),
         textAlign: TextAlign.left,
         maxLines: 3,

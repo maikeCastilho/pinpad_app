@@ -32,13 +32,14 @@ class SiTefService {
     }
   }
 
-  Future<String?> iniciarPagamento({required String valor, String modalidade = "0"}) async {
+  Future<String?> iniciarPagamento({required String valor, String modalidade = "0", String restricoes = ""}) async {
     try{
       final String result = await platform.invokeMethod(
           'iniciarPagamento',
           {
             'valor': valor,
-            'modalidade': modalidade
+            'modalidade': modalidade,
+            'restricoes': restricoes
           },
       );
       print("Resultado do Payment: $result");
@@ -82,6 +83,29 @@ class SiTefService {
       await platform.invokeMethod('testarConexao');
     } catch (e) {
       print("Erro ao testar a comunicacao");
+    }
+  }
+
+  Future<void> sendMenuSelection(String selectedOption) async {
+    try {
+      await platform.invokeMethod('sendMenuSelection', {
+        'option': selectedOption,
+      });
+    } catch (e) {
+      print('Erro ao enviar seleção de menu: $e');
+      rethrow;
+    }
+  }
+
+  // ✅ NOVO: Enviar confirmação
+  Future<void> sendConfirmation(bool confirmed) async {
+    try {
+      await platform.invokeMethod('sendConfirmation', {
+        'confirmed': confirmed,
+      });
+    } catch (e) {
+      print('Erro ao enviar confirmação: $e');
+      rethrow;
     }
   }
 }

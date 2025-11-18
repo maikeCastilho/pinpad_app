@@ -12,7 +12,7 @@ class FunctionsScreen extends StatefulWidget {
 
 class _FunctionsScreenState extends State<FunctionsScreen> {
   final SiTefService _sitef = SiTefService();
-  final CliSitefEventListener _eventListener = CliSitefEventListener();
+  final CliSiTefEventListener _eventListener = CliSiTefEventListener();
 
   String _currentMessage = '';
   Map<String, dynamic> _currentResult = {};
@@ -43,25 +43,120 @@ class _FunctionsScreenState extends State<FunctionsScreen> {
         _currentResult = data;
         _currentMessage = '';
       });
+    });
 
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Transação concluída'),
-            backgroundColor: Colors.grey.shade800,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+    // ✅ Escutar eventos gerais
+    _eventListener.events.listen((event) {
+      final type = event['type'] as String?;
+      final data = event['data']; // ✅ Pegar data sem cast ainda
+
+      if (type == 'menu_required' && data != null) {
+        _showMenuDialog(data as Map<String, dynamic>); // ✅ Cast aqui
+      }
+
+      if (type == 'confirmation_required' && data != null) {
+        _showConfirmationDialog(data as Map<String, dynamic>); // ✅ Cast aqui
+      }
+
+      if (type == 'clear_message') {
+        setState(() {
+          _currentMessage = '';
+        });
       }
     });
+  }
 
-    _eventListener.errors.listen((error) {
-      setState(() {
-        _isProcessing = false;
-        _currentError = error;
-        _currentMessage = '';
-      });
-    });
+  void _showMenuDialog(Map<String, dynamic> data) {
+    final title = data['title'] as String? ?? 'Selecione';
+    final options = data['options'] as List<dynamic>? ?? [];
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true, // ✅ IMPORTANTE: Usar navigator raiz
+      builder: (BuildContext dialogContext) => WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          title: Text(title),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: options.map((option) {
+                final optionStr = option.toString();
+                final parts = optionStr.split(':');
+                final code = parts[0].trim();
+                final description = parts.length > 1 ? parts[1].trim() : optionStr;
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    title: Text(
+                      description,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.of(dialogContext).pop();
+                      _sitef.sendMenuSelection(code);
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+// ✅ Enviar seleção de menu
+  void _sendMenuSelection(String selectedOption) {
+    _sitef.sendMenuSelection(selectedOption);
+  }
+
+// ✅ Mostrar dialog de confirmação
+  void _showConfirmationDialog(Map<String, dynamic> data) {
+    final message = data['message'] as String? ?? 'Confirmar operação?';
+
+    // ✅ Usar o context da tela atual (não da Activity)
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true, // ✅ IMPORTANTE: Usar navigator raiz
+      builder: (BuildContext dialogContext) => WillPopScope(
+        onWillPop: () async => false, // ✅ Bloquear botão voltar
+        child: AlertDialog(
+          title: const Text('Confirmação'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _sitef.sendConfirmation(false);
+              },
+              child: const Text(
+                'Não',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _sitef.sendConfirmation(true);
+              },
+              child: const Text(
+                'Sim',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _executarFuncao(String nome, Future<String?> Function() funcao) async {

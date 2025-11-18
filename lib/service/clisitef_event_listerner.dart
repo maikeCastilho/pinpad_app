@@ -1,30 +1,37 @@
 import 'package:flutter/services.dart';
+import 'dart:async';
 
-class CliSitefEventListener {
+class CliSiTefEventListener {
   static const EventChannel _eventChannel = EventChannel('clisitef_events');
+  Stream<Map<String, dynamic>>? _eventStream;
 
-  Stream<Map<Object?, Object?>>? _eventStream;
-
-  Stream<Map<Object?, Object?>> get events {
-    _eventStream ??= _eventChannel.receiveBroadcastStream().map((event) => Map<String, dynamic>.from(event));
-    _eventStream!.listen((event) {
-      print("EVENT RECEIVED: $event");
-      print("Event type: ${event['type']}");
-      print("Event data: ${event['data']}");
+  Stream<Map<String, dynamic>> get events {
+    _eventStream ??= _eventChannel.receiveBroadcastStream().map((event) {
+      if (event is Map) {
+        return Map<String, dynamic>.from(event.map(
+              (key, value) => MapEntry(
+            key.toString(),
+            value is Map ? Map<String, dynamic>.from(value) : value,
+          ),
+        ));
+      }
+      return <String, dynamic>{};
     });
+
     return _eventStream!;
   }
 
   Stream<String> get messages {
-    return events
-        .where((event) => event['type'] == 'message')
-        .map((event) {
+    return events.where((event) => event['type'] == 'message').map((event) {
+      final data = event['data'];
 
-      final data = event['data'] as Map<Object?, Object?>;
+      if (data is Map) {
+        final message = data['message'];
+        print("📝 MESSAGE: $message");
+        return message?.toString() ?? '';
+      }
 
-      print("MESSAGE: $data");
-
-      return data['message'] as String;
+      return '';
     });
   }
 
@@ -32,27 +39,36 @@ class CliSitefEventListener {
     return events
         .where((event) => event['type'] == 'transaction_result')
         .map((event) {
-      final data = event['data'] as Map<String, dynamic>;
+      final data = event['data'];
 
-      // ✅ Print aqui dentro do map
-      print("📊 TRANSACTION RESULT: $data");
-      print("   Stage: ${data['stage']}");
-      print("   ResultCode: ${data['resultCode']}");
-      print("   Success: ${data['success']}");
+      // ✅ Converter data para Map<String, dynamic>
+      if (data is Map) {
+        final resultMap = Map<String, dynamic>.from(data.map(
+              (key, value) => MapEntry(key.toString(), value),
+        ));
 
-      return data;
+        print("════════════════════════════════════════");
+        print("📊 TRANSACTION RESULT:");
+        print("   Stage: ${resultMap['stage']}");
+        print("   Code: ${resultMap['resultCode']}");
+        print("   Success: ${resultMap['success']}");
+        print("════════════════════════════════════════");
+
+        return resultMap;
+      }
+
+      return <String, dynamic>{};
     });
   }
 
   Stream<String> get errors {
-    print("ERRORS: ${events
-        .where((event) => event['type'] == 'error')
-        .map((event) => event['data'] as String)}");
-
     return events
         .where((event) => event['type'] == 'error')
-        .map((event) => event['data'] as String);
+        .map((event) {
+      final data = event['data'];
+      final error = data?.toString() ?? 'Erro desconhecido';
+      print("❌ ERROR: $error");
+      return error;
+    });
   }
-
-
 }
