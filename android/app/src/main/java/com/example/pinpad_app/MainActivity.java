@@ -218,10 +218,22 @@ public class MainActivity extends FlutterActivity implements ICliSiTefListener {
 
         switch (command) {
             case CliSiTef.CMD_RESULT_DATA:
-                if (fieldId == Transaction.CAMPO_COMPROVANTE_CLIENTE.getValor() || fieldId == Transaction.CAMPO_COMPROVANTE_ESTAB.getValor()) {
-                    String comprovante = clisitef.getBuffer();
+                String bufferData = clisitef.getBuffer();
+
+                // ✅ LOG DE TODOS OS CAMPOS
+                Log.d("CAMPO", "fieldId=" + fieldId + ", value=" + bufferData);
+
+                // ✅ ENVIAR TODOS PARA FLUTTER
+                Map<String, Object> fieldData = new HashMap<>();
+                fieldData.put("fieldId", fieldId);
+                fieldData.put("value", bufferData);
+                sendEvent("field_data", fieldData);
+
+                // Tratamento especial para comprovantes
+                if (fieldId == Transaction.CAMPO_COMPROVANTE_CLIENTE.getValor()
+                        || fieldId == Transaction.CAMPO_COMPROVANTE_ESTAB.getValor()) {
                     Map<String, Object> receiptData = new HashMap<>();
-                    receiptData.put("receipt", comprovante);
+                    receiptData.put("receipt", bufferData);
                     receiptData.put("fieldId", fieldId);
                     receiptData.put("isClient", fieldId == Transaction.CAMPO_COMPROVANTE_CLIENTE.getValor());
                     sendEvent("receipt", receiptData);
@@ -300,6 +312,7 @@ public class MainActivity extends FlutterActivity implements ICliSiTefListener {
                 }).start();
                 break;
 
+
             case CliSiTef.CMD_GET_MENU_OPTION:
                 String menuOptions = clisitef.getBuffer();
                 String[] options = menuOptions.split(";");
@@ -333,6 +346,8 @@ public class MainActivity extends FlutterActivity implements ICliSiTefListener {
                     }
                 }).start();
                 break;
+
+
 
             default:
                 clisitef.continueTransaction("");

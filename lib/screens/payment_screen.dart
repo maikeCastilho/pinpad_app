@@ -95,14 +95,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Fechar'),
           ),
-          ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Implementar impressão ou compartilhamento
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.share),
-            label: const Text('Compartilhar'),
-          ),
+
         ],
       ),
     );
